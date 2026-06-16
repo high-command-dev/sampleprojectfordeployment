@@ -17,9 +17,9 @@ app.use(
 
 app.use(express.json());
 
-app.use('/health', healthRoutes);
-app.use('/test', testRoutes);
-app.use('/auth', authRoutes);
+app.use('/api/health', healthRoutes);
+app.use('/api/test', testRoutes);
+app.use('/api/auth', authRoutes);
 
 app.use(notFound);
 
