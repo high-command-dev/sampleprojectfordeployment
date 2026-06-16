@@ -30,7 +30,7 @@ const withTimeout = (promise, timeoutMs, label) =>
 
 const sendEmail = async ({ to, subject, html, text }) => {
   if (!isEmailServiceConfigured()) {
-    throw createEmailServiceError('Email service is not ready. SMTP verification failed or timed out.');
+    throw createEmailServiceError('Email service is not configured.');
   }
 
   try {

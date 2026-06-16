@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
 const requiredSmtpVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
-const DEFAULT_SMTP_TIMEOUT_MS = 15000;
+const DEFAULT_SMTP_TIMEOUT_MS = 30000;
 
 const isBlank = (value) => value === undefined || value === null || String(value).trim() === '';
 
@@ -82,7 +82,7 @@ if (missingSmtpVars.length === 0 && parsedPort) {
   });
 }
 
-const isEmailServiceConfigured = () => Boolean(transporter) && transporterVerified;
+const isEmailServiceConfigured = () => Boolean(transporter);
 
 const verifyTransporterSafely = async () => {
   if (!transporter) {
