@@ -14,6 +14,7 @@ const allowedOrigins = new Set([
   process.env.CLIENT_URL || 'http://localhost:5173',
   'http://localhost:5173',
   'http://localhost:5174',
+  'https://sampleprojectdeployment-fecb.vercel.app/'
 ]);
 
 app.use(
