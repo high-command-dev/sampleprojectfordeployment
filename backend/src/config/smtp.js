@@ -2,7 +2,9 @@ const nodemailer = require('nodemailer');
 
 const requiredSmtpVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
 
-const getMissingSmtpVars = () => requiredSmtpVars.filter((key) => !process.env[key]);
+const isBlank = (value) => value === undefined || value === null || String(value).trim() === '';
+
+const getMissingSmtpVars = () => requiredSmtpVars.filter((key) => isBlank(process.env[key]));
 
 const missingSmtpVars = getMissingSmtpVars();
 
@@ -11,7 +13,8 @@ if (missingSmtpVars.length > 0) {
 }
 
 const parseSmtpPort = () => {
-  const parsedPort = Number(process.env.SMTP_PORT || 587);
+  const rawPort = process.env.SMTP_PORT || 587;
+  const parsedPort = Number(String(rawPort).trim());
 
   if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
     return null;
