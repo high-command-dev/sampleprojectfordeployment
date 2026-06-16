@@ -1,4 +1,4 @@
-const { transporter, isEmailServiceConfigured } = require('../config/smtp');
+const { transporter, isEmailServiceConfigured, smtpTimeoutMs } = require('../config/smtp');
 
 const createEmailServiceError = (message, cause) => {
   const error = new Error(message);
@@ -11,22 +11,47 @@ const createEmailServiceError = (message, cause) => {
   return error;
 };
 
+const withTimeout = (promise, timeoutMs, label) =>
+  new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(createEmailServiceError(`${label} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+
 const sendEmail = async ({ to, subject, html, text }) => {
   if (!isEmailServiceConfigured()) {
-    throw createEmailServiceError('Email service is not configured');
+    throw createEmailServiceError('Email service is not ready. SMTP verification failed or timed out.');
   }
 
   try {
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM,
-      to,
-      subject,
-      text,
-      html,
-    });
+    await withTimeout(
+      transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to,
+        subject,
+        text,
+        html,
+      }),
+      smtpTimeoutMs,
+      'SMTP send'
+    );
   } catch (error) {
     console.warn(`Failed to send email: ${error.message}`);
-    throw createEmailServiceError('Email service is not configured', error);
+    if (error.statusCode === 503) {
+      throw error;
+    }
+
+    throw createEmailServiceError(`Failed to send email: ${error.message}`, error);
   }
 };
 

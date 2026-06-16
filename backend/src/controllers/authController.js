@@ -39,14 +39,14 @@ const sendOtpMessage = async (email, otp, purpose) => {
   });
 };
 
-const emailServiceUnavailableResponse = (res) =>
+const emailServiceUnavailableResponse = (res, message = 'Email service is not configured. OTP cannot be sent.') =>
   res.status(503).json({
     success: false,
-    message: 'Email service is not configured. OTP cannot be sent.',
+    message,
   });
 
 const isEmailServiceUnavailableError = (error) =>
-  error?.statusCode === 503 || error?.message === 'Email service is not configured';
+  error?.statusCode === 503 || error?.message?.includes('Email service');
 
 const registerUser = async (req, res) => {
   try {
@@ -64,7 +64,7 @@ const registerUser = async (req, res) => {
     }
 
     if (!isEmailServiceConfigured()) {
-      return emailServiceUnavailableResponse(res);
+      return emailServiceUnavailableResponse(res, 'Email service is not ready yet. Please try again later.');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -86,10 +86,10 @@ const registerUser = async (req, res) => {
       await User.findByIdAndDelete(user._id);
 
       if (isEmailServiceUnavailableError(emailError)) {
-        return emailServiceUnavailableResponse(res);
+        return emailServiceUnavailableResponse(res, emailError.message || 'Unable to send OTP email.');
       }
 
-      return emailServiceUnavailableResponse(res);
+      return emailServiceUnavailableResponse(res, 'Unable to send OTP email. Please try again later.');
     }
 
     return res.status(201).json({
@@ -172,7 +172,7 @@ const loginUser = async (req, res) => {
     }
 
     if (!isEmailServiceConfigured()) {
-      return emailServiceUnavailableResponse(res);
+      return emailServiceUnavailableResponse(res, 'Email service is not ready yet. Please try again later.');
     }
 
     const otp = generateOtp();
@@ -188,10 +188,10 @@ const loginUser = async (req, res) => {
       await user.save();
 
       if (isEmailServiceUnavailableError(emailError)) {
-        return emailServiceUnavailableResponse(res);
+        return emailServiceUnavailableResponse(res, emailError.message || 'Unable to send OTP email.');
       }
 
-      return emailServiceUnavailableResponse(res);
+      return emailServiceUnavailableResponse(res, 'Unable to send OTP email. Please try again later.');
     }
 
     return res.status(200).json({
